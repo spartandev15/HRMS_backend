@@ -25,7 +25,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $data['first_name'],
                 'last_name' => $data['last_name'],
-                'orgaisation' => $data['orgaisation'],
+                'organisation' => $data['organisation'],
                 'organisation_id' => $data['organisation_id'],
                 'address' => $data['address'],
                 'payment' => $data['payment'],
@@ -48,7 +48,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
 
-        
+       
         if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
             if (User::where('email', $request->email)->first() != null) {
 
@@ -90,8 +90,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $user = User::where('email', $request->email)
-            ->first();
+        $user = User::where('email', $request->email)->first();
         if ($user != null) {
                 if (Hash::check($request->password, $user->password)) {
 
@@ -248,7 +247,7 @@ class AuthController extends Controller
             'emp_id' => $request->emp_id,
             'profile_photo' => $request->profile_photo,
         ]);
-
+                     
         $user =  User::where('id',$user_id)->with('userDetail')->first();
         return response()->json([
             'result' => true,
@@ -295,6 +294,17 @@ class AuthController extends Controller
                 'profile_photo' => optional($user->userDetail)->profile_photo,
             ]
         ]);
+    }
+    
+    public function upload_document(Request $request){
+              $image = $request->file('document_image');
+              $user_id = auth()->user()->id;
+              $path = $image->store('images', 'public');
+                $user = User_Detail::where('user_id',$user_id)->update([
+                    'upload_document' => $path,
+                ]);
+                return response()->json(['message' => 'Image uploaded successfully', 'path' => $path], 201);
+
     }
 }
 
