@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\LeaveManagementController;
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "api" middleware group. Make something great!
 |
-*/
+*/  
 Route::controller(AuthController::class)->group(function(){
     Route::post("signup","register");
     Route::post("login","login")->name('login');
@@ -54,6 +54,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('projects/timers/stop/{id}', [TimerController::class, 'stopRunning']);
     Route::post('projects/timers/store/{id}', [TimerController::class, 'store']);
     Route::get('projects/timers/active/{id}', [TimerController::class, 'running']);
+    Route::get('projects/timers/pause/{id}', [TimerController::class, 'pause']);
     
     // Leave Management
     Route::post('add/leave', [LeaveManagementController::class, 'create']);

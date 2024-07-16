@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
 use App\Http\Controllers\Api\Controller;
 use App\Models\Project; 
 use Illuminate\Http\Request;
@@ -13,8 +12,7 @@ class TimerController extends Controller
 {
     public function store(Request $request, int $id)
         {
-            // $data = $request->validate(['name' => 'required|between:3,100']);
-            $validator = Validator::make($request->all(), [
+           $validator = Validator::make($request->all(), [
                 'name' => 'required',
             ]);
             if ($validator->fails()) {
@@ -41,24 +39,82 @@ class TimerController extends Controller
                 ]
             ]);
         }
-
         public function running($id)
         {
-
-             $timer = Timer::with('project')->mine()->running()->first() ?? [];
-              dd($timer);  
-             return response()->json([
+            $timer = Timer::with(['project', 'user'])->mine()->where('status', 'running')->first() ?? [];
+            
+            if (!$timer) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'No running timer found',
+                    'data' => [],
+                ]);
+            }
+        
+            // Calculate overtime if the timer is running for longer than a standard period (e.g., 8 hours)
+            $standardDuration = 8 * 60 * 60; // 8 hours in seconds
+            $startedAt = \Carbon\Carbon::parse($timer->started_at, 'Asia/Kolkata');
+            $currentDuration = now('Asia/Kolkata')->timestamp - $startedAt->timestamp;
+        
+            if ($currentDuration > $standardDuration) {
+                $overtime = $currentDuration - $standardDuration;
+                Timer::where('id', $id)->update([
+                    'overtime' => gmdate('H:i:s', $overtime),
+                ]);
+            } 
+        
+            // Return the response as JSON
+            return response()->json([
                 'result' => true,
-                'message' => 'Get data Data',
-                "data"=>[
-                    'project_name' => $timer->name,
+                'message' => 'Timer is Running',
+                'data' => [
+                    'project_name' => optional($timer->project)->name,
                     'started_at' => $timer->started_at,
                     'stopped_at' => '',
                     'user_name' => optional($timer->user)->name,
                     'email' => optional($timer->user)->email,
-                ]
+                    'overtime' => $timer->overtime,
+                ],
             ]);
         }
+        
+        public function pause($id)
+        {
+            $timer = Timer::mine()->where('status', 'running')->find($id);
+
+            if (!$timer) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'No running timer found to pause',
+                ]);
+            }
+
+            // Calculate the duration the timer has been running
+            $startedAt = \Carbon\Carbon::parse($timer->started_at, 'Asia/Kolkata');
+            $pausedAt = now('Asia/Kolkata');
+            $runningDuration = $pausedAt->timestamp - $startedAt->timestamp;
+
+            // Update the timer with the paused status and running duration
+            $timer->update([
+                'status' => 'paused',
+                'paused_at' => $pausedAt,
+                'running_duration' => $runningDuration,
+            ]);
+
+            return response()->json([
+                'result' => true,
+                'message' => 'Timer has been paused',
+                'data' => [
+                    'id' => $timer->id,
+                    'project_name' => optional($timer->project)->name,
+                    'started_at' => $timer->started_at,
+                    'paused_at' => $pausedAt,
+                    'running_duration' => gmdate('H:i:s', $runningDuration),
+                ],
+            ]);
+        }
+
+
         // stop reunning
         public function stopRunning()
         {
