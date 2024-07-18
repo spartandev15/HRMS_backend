@@ -16,11 +16,21 @@ return new class extends Migration
             $table->string('user_id');
             $table->string('gender')->nullable();
             $table->string('dob')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('tax_number')->nullable();
             $table->string('job_title')->nullable();
             $table->string('department')->nullable();
             $table->string('joining_date')->nullable();
             $table->string('emp_id')->nullable();
             $table->string('profile_photo')->nullable();
+            $table->string('country')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('zipcode')->nullable();
+            $table->string('emergency_name')->nullable();
+            $table->string('relationship')->nullable();
+            $table->string('emergency_phone')->nullable();
+            $table->string('emergency_mobileno')->nullable();
             $table->timestamps();
         });
     }

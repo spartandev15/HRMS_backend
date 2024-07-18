@@ -15,9 +15,17 @@ class User_Detail extends Model
         'dob',
         'job_title',
         'department',
-        'joining_date',
+        'joining_date',         
         'emp_id',
         'profile_photo',
+        'country',
+        'city',
+        'state',
+        'zipcode',
+        'emergency_name',
+        'relationship',
+        'emergency_phone',
+        'emergency_mobileno',
     ];
 
 }

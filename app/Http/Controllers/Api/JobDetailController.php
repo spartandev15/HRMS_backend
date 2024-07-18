@@ -2,24 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
-use App\Models\Holiday;
+use App\Models\Events;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-class HolidayController extends Controller
+use Illuminate\Http\Request;  
+use Illuminate\Support\Facades\Auth;    
+class JobDetailController extends Controller
 {
     /**
- 
-    * Display a listing of the resource.
+     * Display a listing of the resource.
      */
     public function index()
     {
         $user = auth()->user();
-       $holidays =  Holiday::where('user_id',$user->id)->get();
+       $events =  Events::where('user_id',$user->id)->get();
        return response()->json([
         'result' => true,
-        'message' => 'Holiday Created successful.',
-        'data'=>$holidays,
+        'message' => 'Events Created successful.',
+        'data'=>$events,
       ]);
     }
    
@@ -35,31 +34,31 @@ class HolidayController extends Controller
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $holidays = $this->store($request->all());
-        if ($holidays) {
+        $events = $this->store($request->all());
+        if ($events) {
             return response()->json([
                 'result' => true,
-                'message' => 'Holiday Created successful.',
+                'message' => 'Events Created successful.',
                 
             ]);
         } else {
             return $this->registrationFailed("created failed");
         }
     }
-
+      
     /**
      * Store a newly created resource in storage.
      */
     public function store($data)
     {
         $user = auth()->user();
-        $holiday_data = Holiday::create([
+        $events_data = Events::create([
             'description' => $data['description'],
                 'title' => $data['title'],
-                'date' => $data['date'],
+                'members' => $data['members'],
                 'user_id' => $user->id,
         ]);
-         return $holiday_data;
+         return $events_data;
     }
     protected function registrationFailed($message)
     {
@@ -83,24 +82,23 @@ class HolidayController extends Controller
      */
     public function edit(Request $request,$id)
     {
-       
         $user = auth()->user();
-        $holidays =  Holiday::where('id',$id)->where('user_id',$user->id)->get();
+        $events_data =  Events::where('id',$id)->where('user_id',$user->id)->get();
         return response()->json([
          'result' => true,
-         'message' => 'Holiday detail data',
-         'data'=>$holidays,
+         'message' => 'Events detail data',
+         'data'=>$events_data,
      ]);
     }
     public function update_data($data)
     {
-        $holiday_data = Holiday::where('id',$data['id'])->update([
+        $events_data = Events::where('id',$data['id'])->update([
             'description' => $data['description'],
                 'title' => $data['title'],
-                'date' => $data['date']
-        ]);
-         return $holiday_data;
-    }
+                 'members' => $data['members'],
+                ]);
+         return $events_data;
+    }   
     /**
      * Update the specified resource in storage.
      */
@@ -113,11 +111,11 @@ class HolidayController extends Controller
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $holidays = $this->update_data($request->all());
-        if ($holidays) {
+        $events_data = $this->update_data($request->all());
+        if ($events_data) {
             return response()->json([
                 'result' => true,
-                'message' => 'Holiday updated successful.',
+                'message' => 'Events updated successful.',
                 
             ]);
         } else {

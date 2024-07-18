@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PoliciesManagementController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\TimerController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\EventsController;
 use App\Http\Controllers\Api\LeaveManagementController;
 
 /*
@@ -33,9 +34,15 @@ Route::middleware('auth:api')->group(function () {
     // Protected route for logout
     Route::post('/update/profile', [AuthController::class, 'update_profile']);
     Route::get('get/profile', [AuthController::class, 'get_profile']);
-    Route::get('get/profile', [AuthController::class, 'get_profile']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::post('upload-documents', [AuthController::class, 'upload_document']);
+    Route::post('upload-profile-image', [AuthController::class, 'upload_profile_image']);
+
+    // User Address
+    Route::post('user/address', [AuthController::class, 'address']);
+    // Emergency Contact Data
+    Route::post('user/emergency-contact', [AuthController::class, 'emergency_contact']);
+
 
     // holiday 
     Route::post('add/holiday', [HolidayController::class, 'create']);
@@ -65,5 +72,13 @@ Route::middleware('auth:api')->group(function () {
 
     // Policies
     Route::post('add/policies', [PoliciesManagementController::class, 'store']);
+
+     // holiday 
+     Route::post('add/events', [EventsController::class, 'create']);
+     Route::get('edit/events/{id}', [EventsController::class, 'edit']);
+     Route::get('get/events', [EventsController::class, 'index']);
+     Route::post('update/events', [EventsController::class, 'update']);
+
+
 });
 

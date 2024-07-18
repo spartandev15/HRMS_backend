@@ -99,7 +99,7 @@ class AuthController extends Controller
                     // }
                     return $this->loginSuccess($user);
                 } else {
-                    return $this->loginFailed(localize('Unauthorized'));
+                    return $this->loginFailed('Unauthorized');
                 }
            
         } else {
@@ -234,10 +234,53 @@ class AuthController extends Controller
         ]);
 
     }
-
+    
+    public function upload_profile_image(Request $request){
+        $user_id = auth()->user()->id;
+        $userDetail = User_Detail::where('user_id', $user_id)->first();
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photoPath = 'public/profile_photos/' . $photoName;
+    
+            // Move the file to the public/profile_photos directory
+            $photo->move(public_path('profile_photos'), $photoName);
+    
+        } else {
+            $photoPath = $userDetail->profile_photo;
+        }
+        User_Detail::where('user_id',$user_id)->update([
+             'profile_photo' => $photoPath,
+          ]);
+          $user =  User::where('id',$user_id)->with('userDetail')->first();
+          $photopathurl =  optional($user->userDetail)->profile_photo;
+          return response()->json([
+              'result' => true,
+              'message' => 'Update Profile Successfully',
+              "user"=>[
+                  'name' => $user->name,
+                  'last_name' => $user->last_name,
+                  'orgaisation' => $user->orgaisation,
+                  'organisation_id' => $user->organisation_id,
+                  'address' => $user->address,
+                  'payment' => $user->payment,
+                  'email' => $user->email,
+                  'gender' => optional($user->userDetail)->gender,
+                  'dob' => optional($user->userDetail)->dob,
+                  'job_title' => optional($user->userDetail)->job_title,
+                  'department' => optional($user->userDetail)->department,
+                  'joining_date' => optional($user->userDetail)->joining_date,
+                  'emp_id' => optional($user->userDetail)->emp_id,
+                  'phone' => optional($user->userDetail)->phone,
+                  'tax_number' =>  optional($user->userDetail)->tax_number,
+                  'profile_photo' =>  $photopathurl ? url($photopathurl) : null,
+              ]
+          ]); 
+    }
     public function update_profile(Request $request){
         $user_id = auth()->user()->id;
        
+             
         User_Detail::where('user_id',$user_id)->update([
             'gender' => $request->gender,
             'dob' => $request->dob,
@@ -245,10 +288,13 @@ class AuthController extends Controller
             'department' => $request->department,
             'joining_date' => $request->joining_date,
             'emp_id' => $request->emp_id,
-            'profile_photo' => $request->profile_photo,
+            'profile_photo' => $photoPath,
+            'phone' => $request->phone,
+            'tax_number' =>  $request->tax_number,
         ]);
-                     
+                              
         $user =  User::where('id',$user_id)->with('userDetail')->first();
+        $photopathurl =  optional($user->userDetail)->profile_photo;
         return response()->json([
             'result' => true,
             'message' => 'Update Profile Successfully',
@@ -266,15 +312,17 @@ class AuthController extends Controller
                 'department' => optional($user->userDetail)->department,
                 'joining_date' => optional($user->userDetail)->joining_date,
                 'emp_id' => optional($user->userDetail)->emp_id,
-                'profile_photo' => optional($user->userDetail)->profile_photo,
+                'phone' => optional($user->userDetail)->phone,
+                'tax_number' =>  optional($user->userDetail)->tax_number,
+                'profile_photo' =>  $photopathurl ? url($photopathurl) : null,
             ]
-        ]);
+        ]);  
     }
     public function get_profile(Request $request){
         $user_id = auth()->user()->id;
-       
         $user =  User::where('id',$user_id)->with('userDetail')->first();
-        return response()->json([
+        $photopathurl =  optional($user->userDetail)->profile_photo;
+        return response()->json([   
             'result' => true,
             'message' => 'Get Profile Data',
             "user"=>[
@@ -291,11 +339,13 @@ class AuthController extends Controller
                 'department' => optional($user->userDetail)->department,
                 'joining_date' => optional($user->userDetail)->joining_date,
                 'emp_id' => optional($user->userDetail)->emp_id,
-                'profile_photo' => optional($user->userDetail)->profile_photo,
+                'profile_photo' => $photopathurl ? url($photopathurl) : null,
+                'phone' => optional($user->userDetail)->phone,
+                'tax_number' =>  optional($user->userDetail)->tax_number,
             ]
         ]);
     }
-    
+        
     public function upload_document(Request $request){
               $image = $request->file('document_image');
               $user_id = auth()->user()->id;
@@ -306,5 +356,40 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Image uploaded successfully', 'path' => $path], 201);
 
     }
+    public function address(Request $request)
+    {
+        $user_id = auth()->user()->id;
+       
+             
+        User_Detail::where('user_id',$user_id)->update([
+            'country' => $request->country,
+            'state' => $request->state,
+            'city' => $request->city,
+            'zipcode' => $request->zipcode
+        ]);
+        return response()->json([   
+            'result' => true,
+            'message' => 'User Address Data updated',
+            
+        ]);
+    }
+    public function emergency_contact(Request $request)
+    {
+        $user_id = auth()->user()->id;
+       
+             
+        User_Detail::where('user_id',$user_id)->update([
+            'emergency_name' => $request->emergency_name,
+            'relationship' => $request->relationship,
+            'emergency_phone' => $request->emergency_phone,
+            'emergency_mobileno' => $request->emergency_mobileno
+        ]);
+        return response()->json([   
+            'result' => true,
+            'message' => 'User Emergency Contact Data updated',
+            
+        ]);
+    }
+    
 }
 
