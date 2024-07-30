@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PoliciesManagementController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\TimerController;
+use App\Http\Controllers\Api\JobDetailController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\EventsController;
 use App\Http\Controllers\Api\LeaveManagementController;
@@ -19,7 +20,7 @@ use App\Http\Controllers\Api\LeaveManagementController;
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "api" middleware group. Make something great!
 |
-*/  
+*/   
 Route::controller(AuthController::class)->group(function(){
     Route::post("signup","register");
     Route::post("login","login")->name('login');
@@ -78,7 +79,11 @@ Route::middleware('auth:api')->group(function () {
      Route::get('edit/events/{id}', [EventsController::class, 'edit']);
      Route::get('get/events', [EventsController::class, 'index']);
      Route::post('update/events', [EventsController::class, 'update']);
-
-
-});
+ 
+     // Job Details
+     Route::post('update/job-details', [JobDetailController::class, 'job_store']);
+     Route::post('update/eduction-details', [JobDetailController::class,'education_details']);
+     Route::post('update/work-experience', [JobDetailController::class,'work_experience']);
+     Route::post('update/salary-detail', [JobDetailController::class,'salary_detail']);
+});  
 

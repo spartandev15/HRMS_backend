@@ -320,7 +320,7 @@ class AuthController extends Controller
     }
     public function get_profile(Request $request){
         $user_id = auth()->user()->id;
-        $user =  User::where('id',$user_id)->with('userDetail')->first();
+        $user =  User::where('id',$user_id)->with('userDetail','JobDetail')->first();
         $photopathurl =  optional($user->userDetail)->profile_photo;
         return response()->json([   
             'result' => true,
@@ -342,6 +342,27 @@ class AuthController extends Controller
                 'profile_photo' => $photopathurl ? url($photopathurl) : null,
                 'phone' => optional($user->userDetail)->phone,
                 'tax_number' =>  optional($user->userDetail)->tax_number,
+                'job_title' =>  optional($user->JobDetail)->job_title,
+                'job_category' =>  optional($user->JobDetail)->job_category,
+                'line_member' =>  optional($user->JobDetail)->line_member,
+                'join_date' =>  optional($user->JobDetail)->join_date,
+                'employement_status' =>  optional($user->JobDetail)->employement_status,
+                'education_level' =>  optional($user->JobDetail)->education_level,
+                'education_institude' =>  optional($user->JobDetail)->education_institude,
+                'education_year' =>  optional($user->JobDetail)->education_year,
+                'education_score' =>  optional($user->JobDetail)->education_score,
+                'work_experience_company' =>  optional($user->JobDetail)->work_experience_company,
+                'work_experience_job_title' =>  optional($user->JobDetail)->work_experience_job_title,
+                'work_experience_from' =>  optional($user->JobDetail)->work_experience_from,
+                'work_experience_to' =>  optional($user->JobDetail)->work_experience_to,
+                'salary_component' =>  optional($user->JobDetail)->salary_component,
+                'salary_pay_frequency' =>  optional($user->JobDetail)->salary_pay_frequency,
+                'salary_currency' =>  optional($user->JobDetail)->salary_currency,
+                'salary_amount' =>  optional($user->JobDetail)->salary_amount,
+                'salary_account_number' =>  optional($user->JobDetail)->salary_account_number,
+                'salary_account_type' =>  optional($user->JobDetail)->salary_account_type,
+                'salary_bank_name' =>  optional($user->JobDetail)->salary_bank_name,
+                'salary_ifsc_code' =>  optional($user->JobDetail)->salary_ifsc_code
             ]
         ]);
     }
@@ -350,7 +371,7 @@ class AuthController extends Controller
               $image = $request->file('document_image');
               $user_id = auth()->user()->id;
               $path = $image->store('images', 'public');
-                $user = User_Detail::where('user_id',$user_id)->update([
+ 2 2                $user = User_Detail::where('user_id',$user_id)->update([
                     'upload_document' => $path,
                 ]);
                 return response()->json(['message' => 'Image uploaded successfully', 'path' => $path], 201);

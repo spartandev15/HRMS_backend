@@ -50,4 +50,7 @@ class User extends Authenticatable
     public function userDetail(){
         return $this->hasOne(User_Detail::class, 'user_id', 'id');
     }
+    public function JobDetail(){
+        return $this->hasOne(JobDetail::class, 'user_id', 'id');
+    }
 }  
