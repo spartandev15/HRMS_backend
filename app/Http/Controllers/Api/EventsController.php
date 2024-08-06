@@ -16,7 +16,7 @@ class EventsController extends Controller
         $user = auth()->user();
        $events =  Events::where('user_id',$user->id)->get();
        return response()->json([
-        'result' => true,
+        'result'  => true,
         'message' => 'Events Created successful.',
         'data'=>$events,
       ]);
@@ -39,7 +39,7 @@ class EventsController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => 'Events Created successful.',
-                
+                8
             ]);
         } else {
             return $this->registrationFailed("created failed");
@@ -62,7 +62,7 @@ class EventsController extends Controller
     }
     protected function registrationFailed($message)
     {
-        return response()->json([
+       return response()->json([
             'result' => false,
             'message' => $message,
            
@@ -116,7 +116,6 @@ class EventsController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => 'Events updated successful.',
-                
             ]);
         } else {
             return $this->registrationFailed("updated failed");

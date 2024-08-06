@@ -11,7 +11,7 @@ class JobDetailController extends Controller
    
     /**
      * Store a newly created resource in storage.
-     */
+     */     
     public function job_store(Request $request)
     {
         $user = auth()->user();
@@ -41,7 +41,7 @@ class JobDetailController extends Controller
             ['user_id' => $user->id],
             [
                 'education_level' => $request->education_level,
-                'education_institute' => $request->education_institute,
+                'education_institude' => $request->education_institute,
                 'education_year' => $request->education_year,
                 'education_score' => $request->education_score,
                 'user_id' => $user->id,

@@ -17,6 +17,7 @@ class JobDetail extends Model
         'employement_status',
         'education_level',
         'education_institude',
+        'employment_status',
         'education_year',
         'education_score',
         'work_experience_company',

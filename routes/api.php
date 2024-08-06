@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\JobDetailController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\EventsController;
 use App\Http\Controllers\Api\LeaveManagementController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,25 +21,26 @@ use App\Http\Controllers\Api\LeaveManagementController;
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "api" middleware group. Make something great!
 |
-*/   
+*/     
 Route::controller(AuthController::class)->group(function(){
     Route::post("signup","register");
     Route::post("login","login")->name('login');
     Route::get("token-check","checkToken")->name('token-check')->middleware('isBanned');
 });
+
 Route::middleware('auth:api')->group(function () {
     // Protected route to get the authenticated user
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
+   
     // Protected route for logout
     Route::post('/update/profile', [AuthController::class, 'update_profile']);
     Route::get('get/profile', [AuthController::class, 'get_profile']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::post('upload-documents', [AuthController::class, 'upload_document']);
     Route::post('upload-profile-image', [AuthController::class, 'upload_profile_image']);
-
+   
     // User Address
     Route::post('user/address', [AuthController::class, 'address']);
     // Emergency Contact Data
@@ -58,11 +60,13 @@ Route::middleware('auth:api')->group(function () {
     Route::get('get/project', [ProjectController::class, 'index']);
     Route::post('update/project', [ProjectController::class, 'update']);
 
-    // TIMERS  DATA
+    // TIMERS  DATA 
+    Route::post('projects/timers/get', [TimerController::class, 'get']);
     Route::post('projects/timers/stop/{id}', [TimerController::class, 'stopRunning']);
     Route::post('projects/timers/store/{id}', [TimerController::class, 'store']);
     Route::get('projects/timers/active/{id}', [TimerController::class, 'running']);
     Route::get('projects/timers/pause/{id}', [TimerController::class, 'pause']);
+    Route::post('projects/timers/screenshot/{timer_id},{project_id}', [TimerController::class, 'take_screeshot']);
     
     // Leave Management
     Route::post('add/leave', [LeaveManagementController::class, 'create']);
@@ -79,10 +83,12 @@ Route::middleware('auth:api')->group(function () {
      Route::get('edit/events/{id}', [EventsController::class, 'edit']);
      Route::get('get/events', [EventsController::class, 'index']);
      Route::post('update/events', [EventsController::class, 'update']);
+      // Dashboard
+     Route::get('dashboard', [DashboardController::class, 'index']);
  
      // Job Details
      Route::post('update/job-details', [JobDetailController::class, 'job_store']);
-     Route::post('update/eduction-details', [JobDetailController::class,'education_details']);
+     Route::post('update/eduction/details', [JobDetailController::class,'education_details']);
      Route::post('update/work-experience', [JobDetailController::class,'work_experience']);
      Route::post('update/salary-detail', [JobDetailController::class,'salary_detail']);
 });  
