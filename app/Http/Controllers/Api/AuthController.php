@@ -249,7 +249,7 @@ class AuthController extends Controller
         } else {
             $photoPath = $userDetail->profile_photo;
         }
-        User_Detail::where('user_id',$user_id)->update([
+          User_Detail::where('user_id',$user_id)->update([
              'profile_photo' => $photoPath,
           ]);
           $user =  User::where('id',$user_id)->with('userDetail')->first();
@@ -349,6 +349,7 @@ class AuthController extends Controller
                 'employement_status' =>  optional($user->JobDetail)->employement_status,
                 'education_level' =>  optional($user->JobDetail)->education_level,
                 'education_institude' =>  optional($user->JobDetail)->education_institude,
+                'employment_status' =>  optional($user->JobDetail)->employment_status,
                 'education_year' =>  optional($user->JobDetail)->education_year,
                 'education_score' =>  optional($user->JobDetail)->education_score,
                 'work_experience_company' =>  optional($user->JobDetail)->work_experience_company,
@@ -371,7 +372,7 @@ class AuthController extends Controller
               $image = $request->file('document_image');
               $user_id = auth()->user()->id;
               $path = $image->store('images', 'public');
- 2 2                $user = User_Detail::where('user_id',$user_id)->update([
+               $user = User_Detail::where('user_id',$user_id)->update([
                     'upload_document' => $path,
                 ]);
                 return response()->json(['message' => 'Image uploaded successfully', 'path' => $path], 201);

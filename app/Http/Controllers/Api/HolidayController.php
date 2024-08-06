@@ -73,7 +73,7 @@ class HolidayController extends Controller
     /**
      * Display the specified resource.
      */
-    public functi+on show(Holiday $holiday)
+    public function show(Holiday $holiday)
     {
         //
     }

@@ -139,6 +139,7 @@ class LeaveManagementController extends Controller
       $sick_leave =  LeaveManagement::where('leave_type',2)->where('user_id',$user->id)->count();
       $meternoty_leave =  LeaveManagement::where('leave_type',3)->where('user_id',$user->id)->count();
       $peternity_leave =  LeaveManagement::where('leave_type',4)->where('user_id',$user->id)->count();
+      $pending_leave =  LeaveManagement::where('leave_type',5)->where('user_id',$user->id)->count();
         return response()->json([
             'result' => true,
             'message' => 'Leaves total',
@@ -147,6 +148,7 @@ class LeaveManagementController extends Controller
                 'sick_leave' => $sick_leave,
                 'meternoty_leave' => $meternoty_leave,
                 'peternity_leave' => $peternity_leave,
+                'pending_leave' => $pending_leave,
             ],
         ]); 
     }

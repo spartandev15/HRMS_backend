@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Models\Project; 
+use App\Models\TimerImage; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,14 @@ use App\Models\Timer;
 use Carbon\Carbon;
 class TimerController extends Controller
 {
+    public function get(Request $request){
+        $timer = Timer::all();
+        return response()->json([
+            'result' => true,
+            'message' => 'Timer Data lists',
+            'data' => $timer,
+        ]);
+    }
     public function store(Request $request, int $id)
         {
            $validator = Validator::make($request->all(), [
@@ -39,7 +48,7 @@ class TimerController extends Controller
                 ]
             ]);
         }
-        public function running($id)
+          public function running($id)
         {
             $timer = Timer::with(['project', 'user'])->mine()->where('status', 'running')->first() ?? [];
             
@@ -88,7 +97,7 @@ class TimerController extends Controller
                     'message' => 'No running timer found to pause',
                 ]);
             }
-
+               
             // Calculate the duration the timer has been running
             $startedAt = \Carbon\Carbon::parse($timer->started_at, 'Asia/Kolkata');
             $pausedAt = now('Asia/Kolkata');
@@ -124,8 +133,28 @@ class TimerController extends Controller
 
             return $timer;
         }
-
-
+                                                                         
+        public function take_screeshot(Request $request){
+                $photo = $request->file('screeshot_image');
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $photoPath = 'public/screeshot_image/' . $photoName;
+        
+                // Move the file to the public/profile_photos directory
+                $photo->move(public_path('screeshot_image'), $photoName);
+                $user_id = auth()->user()->id;
+              
+              TimerImage::create([
+                'user_id' => $user_id,
+                'project_id' => $request->project_id,
+                'timer_id' => $request->timer_id,
+                'image' => $photoPath,
+              ]);
+              return response()->json([
+                'result' => true,
+                'message' => 'Timer Image screenshot added',
+             ]);
+        }
+        
         // failed response 
         protected function registrationFailed($message)
         {

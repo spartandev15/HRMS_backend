@@ -43,7 +43,7 @@ class PoliciesManagementController extends Controller
         } else {
             return $this->registrationFailed("Policies Created failed");
         }
-    }
+    }  
 
     /**
      * Store a newly created resource in storage.
