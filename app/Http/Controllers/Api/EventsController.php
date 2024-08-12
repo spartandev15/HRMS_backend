@@ -39,7 +39,7 @@ class EventsController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => 'Events Created successful.',
-                8
+                
             ]);
         } else {
             return $this->registrationFailed("created failed");
@@ -53,9 +53,11 @@ class EventsController extends Controller
     {
         $user = auth()->user();
         $events_data = Events::create([
-            'description' => $data['description'],
+                'description' => $data['description'],
                 'title' => $data['title'],
                 'members' => $data['members'],
+                'status' => $data['status'],
+                'date' => date('d-m-y'),
                 'user_id' => $user->id,
         ]);
          return $events_data;

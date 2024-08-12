@@ -19,7 +19,7 @@ class LeaveManagementController extends Controller
         'result' => true,
         'message' => 'Leave Data successful.',
         'data'=>$leaves,
-    ]);
+       ]);
     }
 
     /**
@@ -41,8 +41,7 @@ class LeaveManagementController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => 'Leaves Created successful.',
-                
-            ]);
+           ]);
         } else {
             return $this->registrationFailed("created failed");
         }
@@ -103,13 +102,14 @@ class LeaveManagementController extends Controller
            'leave_type' => $data['leave_type'],
            'reason' => $data['reason'],
         ]);
-      
-         return $leaves_data;
+        return $leaves_data;
     }
+
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+
+     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'start_date' => 'required',

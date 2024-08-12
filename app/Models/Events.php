@@ -13,7 +13,9 @@ class Events extends Model
         'user_id',
         'title',
         'members',
-        'description'
+        'description',
+        'status',
+        'date'
     ];
 
 }

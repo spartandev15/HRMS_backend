@@ -16,143 +16,178 @@ class TimerController extends Controller
         return response()->json([
             'result' => true,
             'message' => 'Timer Data lists',
-            'data' => $timer,
+            'data'  => $timer,
         ]);
     }
-    public function store(Request $request, int $id)
-        {
-           $validator = Validator::make($request->all(), [
-                'name' => 'required',
-            ]);
-            if ($validator->fails()) {
-                return $this->registrationFailed($validator->errors()->all());
-            }
-            $timer = Project::mine()->findOrFail($id)
-                                    ->timers()
-                                    ->save(new Timer([
-                                        'name' => $request->name,
-                                        'user_id' => Auth::user()->id,
-                                        'started_at' => new Carbon,
-                                        'project_id' =>$id,
-                                    ]));
+    public function get_detail(Request $request){
+        $current_time_list = Carbon::now()->setTimezone('Asia/Kolkata');
+        // Fetch the timer data
+        $data_check = Timer::whereDate('created_at', $current_time_list->format('Y-m-d'))
+            ->with('user')
+            ->first();
             
-             return response()->json([
-                'result' => true,
-                'message' => 'Timer created success',
-                "data"=>[
-                    'project_name' => $timer->name,
-                    'started_at' => $timer->started_at,
-                    'started_at' => $timer->started_at,
-                    'user_name' => optional($timer->user)->name,
-                    'email' => optional($timer->user)->email,
-                ]
-            ]);
-        }
-          public function running($id)
-        {
-            $timer = Timer::with(['project', 'user'])->mine()->where('status', 'running')->first() ?? [];
-            
-            if (!$timer) {
-                return response()->json([
-                    'result' => false,
-                    'message' => 'No running timer found',
-                    'data' => [],
-                ]);
-            }
-        
-            // Calculate overtime if the timer is running for longer than a standard period (e.g., 8 hours)
-            $standardDuration = 8 * 60 * 60; // 8 hours in seconds
-            $startedAt = \Carbon\Carbon::parse($timer->started_at, 'Asia/Kolkata');
-            $currentDuration = now('Asia/Kolkata')->timestamp - $startedAt->timestamp;
-        
-            if ($currentDuration > $standardDuration) {
-                $overtime = $currentDuration - $standardDuration;
-                Timer::where('id', $id)->update([
-                    'overtime' => gmdate('H:i:s', $overtime),
-                ]);
-            } 
-        
-            // Return the response as JSON
-            return response()->json([
-                'result' => true,
-                'message' => 'Timer is Running',
-                'data' => [
-                    'project_name' => optional($timer->project)->name,
-                    'started_at' => $timer->started_at,
-                    'stopped_at' => '',
-                    'user_name' => optional($timer->user)->name,
-                    'email' => optional($timer->user)->email,
-                    'overtime' => $timer->overtime,
-                ],
-            ]);
-        }
-        
-        public function pause($id)
-        {
-            $timer = Timer::mine()->where('status', 'running')->find($id);
+           
+            if(!empty($data_check)){
 
-            if (!$timer) {
-                return response()->json([
-                    'result' => false,
-                    'message' => 'No running timer found to pause',
-                ]);
+            // Parse the started_at time
+            $started_at = Carbon::parse($data_check->started_at);
+            
+            $end_time = $current_time_list;
+            // Calculate the duration
+            if ((int)$end_time->format('H') >= (int)$started_at->format('H')) {
+                $hours = (int)$end_time->format('H') - (int)$started_at->format('H');
+            
+            } else {
+                // Handle cases where the end time is on the next day (e.g., started_at is 23:00, end_time is 01:00)
+                $hours = ((int)$end_time->format('H')) - (int)$started_at->format('H');
             }
+
+            if ((int)$end_time->format('i') >= (int)$started_at->format('i')) {
+                $minutes = (int)$end_time->format('i') - (int)$started_at->format('i');
+            } else {
+                $minutes = ((int)$started_at->format('i')) - (int)$end_time->format('i');
+                // $hours--;  // Borrow an hour because we've added 60 minutes
+            }
+            $hours = str_pad($hours, 2, '0', STR_PAD_LEFT);
+            $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
+            // $totalDuration = sprintf('%d:%d',$hours, $minutes);
+            $totalDuration = $hours.':'.$minutes;
+         
+            if(!is_null($data_check->running_duration)){
+                list($hours_back, $minutes_back) = explode(':', $data_check->running_duration);
                
-            // Calculate the duration the timer has been running
-            $startedAt = \Carbon\Carbon::parse($timer->started_at, 'Asia/Kolkata');
-            $pausedAt = now('Asia/Kolkata');
-            $runningDuration = $pausedAt->timestamp - $startedAt->timestamp;
+                $hours_data = $hours + $hours_back;
+                $minutes_data = $minutes + $minutes_back;
+                if ($minutes_data >= 60) {
+                    $minutes_data -= 60;
+                    $hours_data += 1;
+                }
+                $hours_check_ = str_pad($hours_data, 2, '0', STR_PAD_LEFT);
+                $minutes_check_ = str_pad($minutes_data, 2, '0', STR_PAD_LEFT);
+                // dd($minutes_back);
+                // You can now use $hours and $minutes as needed
+                // dd($hours_back, $minutes_back,$hours,$minutes);  // This will dump the values of hours and minute
+                $data_check->running_duration = $hours_check_.':'.$minutes_check_;
+            }
+                return response()->json([
+                    'result' => true,
+                    'message' => 'Timer detial  lists',
+                    "data"=>[
+                        'timer' => $data_check,
+                    ]
+                ]);
+            }else{
+                return $this->registrationFailed('Timer is not valid');
+            }
+    }
+        public function punch_in(Request $request)
+        {
+            $current_time_list = Carbon::now()->setTimezone('Asia/Kolkata');
+          
+            // Fetch the timer data
+            $data_check = Timer::whereDate('created_at', $current_time_list->format('Y-m-d'))
+                ->with('user')
+                ->first();
+                if(!empty($data_check)){
+                    $timer = Timer::where('id',$data_check->id)->update(['started_at' => $current_time_list,'stopped_at'=> '','user_id' => Auth::user()->id,'status' =>  'running',]);
+                    $data = Timer::where('id',$data_check->id)->with('user')->first();
+                    return response()->json([
+                        'result' => true,
+                        'message' => 'Timer created successfully',
+                        "data"=>[
+                            'timer' => $data,
+                        ]
+                    ]);
+                }else{
+                   $timer = Timer::create(['started_at' => $current_time_list,'user_id' => Auth::user()->id,'status' =>  'running',]);
+                    $data = Timer::where('id',$timer->id)->with('user')->first();
+                    return response()->json([
+                        'result' => true,
+                        'message' => 'Timer created successfully',
+                        "data"=>[
+                            'timer' => $data,
+                        ]
+                    ]);
+                }
+        }
+        public function punch_out(Request $request)
+        {
+            // Get the current date and time in 'Asia/Kolkata' timezone
+            $current_time_list = Carbon::now()->setTimezone('Asia/Kolkata');
 
-            // Update the timer with the paused status and running duration
-            $timer->update([
-                'status' => 'paused',
-                'paused_at' => $pausedAt,
-                'running_duration' => $runningDuration,
+            // Fetch the timer data
+            $data = Timer::whereDate('created_at', $current_time_list->format('Y-m-d'))
+                ->with('user')
+                ->first(); 
+
+            if (is_null($data)) {
+                return $this->registrationFailed('Timer is not valid');
+            }
+
+            // Parse the started_at time
+            $started_at = Carbon::parse($data->started_at);
+            
+            $end_time = $current_time_list;
+            
+            
+            // Calculate the duration
+            if ((int)$end_time->format('H') >= (int)$started_at->format('H')) {
+                $hours = (int)$end_time->format('H') - (int)$started_at->format('H');
+               
+            } else {
+                // Handle cases where the end time is on the next day (e.g., started_at is 23:00, end_time is 01:00)
+                $hours = ((int)$end_time->format('H')) - (int)$started_at->format('H');
+            }
+           
+            if ((int)$end_time->format('i') >= (int)$started_at->format('i')) {
+                $minutes = (int)$end_time->format('i') - (int)$started_at->format('i');
+            } else {
+                $minutes = ((int)$started_at->format('i')) - (int)$end_time->format('i');
+                // $hours--;  // Borrow an hour because we've added 60 minutes
+            }
+          
+            // dd($started_at->format('i'));
+            // dump('Started At: ', $started_at->format('H:i'));
+            // dump('End Time: ', $end_time->format('H:i'));
+            // dump('Duration: ', "{$hours} hours");
+            // dump('Duration: ', "{$minutes} Minutes");
+            $hours = str_pad($hours, 2, '0', STR_PAD_LEFT);
+            $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
+            // $totalDuration = sprintf('%d:%d',$hours, $minutes);
+            $totalDuration = $hours.':'.$minutes;
+             //    1 31  
+            if(!is_null($data->running_duration)){
+                list($hours_back, $minutes_back) = explode(':', $data->running_duration);
+               
+                $hours_data = $hours + $hours_back;
+                $minutes_data = $minutes + $minutes_back;
+                if ($minutes_data >= 60) {
+                    $minutes_data -= 60;
+                    $hours_data += 1;
+                }
+                // dd($minutes_back);
+                // You can now use $hours and $minutes as needed
+                // dd($hours_back, $minutes_back,$hours,$minutes);  // This will dump the values of hours and minute
+                $total_data = $hours_data.':'.$minutes_data;
+            }else{
+                $total_data = $totalDuration;
+            }
+            Timer::where('id',$data->id)->update([
+                'stopped_at' =>  $end_time,
+                'status' =>  'stop',
+                'running_duration' =>  $total_data,
             ]);
+            $latest_timeupdate = Timer::whereDate('created_at', $current_time_list->format('Y-m-d'))
+                ->with('user')
+                ->first(); 
 
             return response()->json([
                 'result' => true,
-                'message' => 'Timer has been paused',
-                'data' => [
-                    'id' => $timer->id,
-                    'project_name' => optional($timer->project)->name,
-                    'started_at' => $timer->started_at,
-                    'paused_at' => $pausedAt,
-                    'running_duration' => gmdate('H:i:s', $runningDuration),
-                ],
-            ]);
-        }
-
-
-        // stop reunning
-        public function stopRunning()
-        {
-            if ($timer = Timer::mine()->running()->first()) {
-                $timer->update(['stopped_at' => new Carbon]);
-            }
-
-            return $timer;
-        }
-                                                                         
-        public function take_screeshot(Request $request){
-                $photo = $request->file('screeshot_image');
-                $photoName = time() . '_' . $photo->getClientOriginalName();
-                $photoPath = 'public/screeshot_image/' . $photoName;
-        
-                // Move the file to the public/profile_photos directory
-                $photo->move(public_path('screeshot_image'), $photoName);
-                $user_id = auth()->user()->id;
-              
-              TimerImage::create([
-                'user_id' => $user_id,
-                'project_id' => $request->project_id,
-                'timer_id' => $request->timer_id,
-                'image' => $photoPath,
-              ]);
-              return response()->json([
-                'result' => true,
-                'message' => 'Timer Image screenshot added',
-             ]);
+                'message' => 'Timer Punchout successfully',
+                "data"=>[
+                    'timer' => $latest_timeupdate,
+                ]
+                ]);
         }
         
         // failed response 

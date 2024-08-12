@@ -26,6 +26,8 @@ class User extends Authenticatable
         'organisation_id',
         'address',
         'payment',
+        'employee_id',
+        'status',
     ];
 
     /**
