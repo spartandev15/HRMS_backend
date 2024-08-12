@@ -9,7 +9,7 @@ class Timer extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name', 'user_id', 'project_id', 'stopped_at', 'started_at'
+        'name', 'user_id', 'project_id', 'stopped_at', 'started_at','status'
       ];
 
       /**
@@ -25,7 +25,7 @@ class Timer extends Model
       {
           return $this->belongsTo(User::class);
       }
-
+      
       /**
        * Get the related project
        *

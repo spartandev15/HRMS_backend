@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Resources\Api\UserResource;
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\User_Detail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -59,7 +60,7 @@ class AuthController extends Controller
         if($request->password != $request->confirm_password){
             return $this->registrationFailed('please enter same password and conform password');
         }
-      
+                
 
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
@@ -97,7 +98,11 @@ class AuthController extends Controller
                     // if ($user->email_verified_at == null) {
                     //     return $this->loginFailed('Please verify your account');
                     // }
-                    return $this->loginSuccess($user);
+                    if($user->status== "employee"){
+                        return $this->EmployeeloginSuccess($user);
+                    }else{
+                        return $this->loginSuccess($user);
+                    }
                 } else {
                     return $this->loginFailed('Unauthorized');
                 }
@@ -126,6 +131,20 @@ class AuthController extends Controller
                 
             ]
         ]);
+        
+    }
+    protected function EmployeeloginSuccess($user)
+    {
+        $employee = Employee::where('user_id',$user->id)->first();
+        $token = $user->createToken('API Token')->plainTextToken;
+        return response()->json([
+            'result' => true,
+            'message' => 'Successfully Employee logged in',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            "employee"=>  $employee,
+        ]);
+        
     }
     protected function loginFailed($message)
     {
@@ -279,7 +298,18 @@ class AuthController extends Controller
     }
     public function update_profile(Request $request){
         $user_id = auth()->user()->id;
-       
+        $userDetail = User_Detail::where('user_id', $user_id)->first();
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photoPath = 'public/profile_photos/' . $photoName;
+        
+            // Move the file to the public/profile_photos directory
+            $photo->move(public_path('profile_photos'), $photoName);
+    
+        } else {
+            $photoPath = $userDetail->profile_photo;
+        }
              
         User_Detail::where('user_id',$user_id)->update([
             'gender' => $request->gender,
@@ -292,7 +322,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'tax_number' =>  $request->tax_number,
         ]);
-                              
+                               
         $user =  User::where('id',$user_id)->with('userDetail')->first();
         $photopathurl =  optional($user->userDetail)->profile_photo;
         return response()->json([
@@ -317,6 +347,31 @@ class AuthController extends Controller
                 'profile_photo' =>  $photopathurl ? url($photopathurl) : null,
             ]
         ]);  
+    } 
+    public function employeeupdate_profile(Request $request){
+        $user_id = auth()->user()->id;
+        $userDetail = Employee::where('user_id', $user_id)->first();
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photoPath = 'public/profile_photos/' . $photoName;
+    
+            // Move the file to the public/profile_photos directory
+            $photo->move(public_path('profile_photos'), $photoName);
+    
+        } else {
+            $photoPath = $userDetail->profile_photo;
+        }
+       
+        $employee = Employee::where('user_id',$user_id)->update([
+           'profile_photo' => $photoPath,
+        ]);
+
+        return response()->json([
+            'result' => true,
+            'message' => 'Employee Update Profile Successfully',
+           
+        ]); 
     }
     public function get_profile(Request $request){
         $user_id = auth()->user()->id;

@@ -7,10 +7,13 @@ use App\Http\Controllers\Api\PoliciesManagementController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\TimerController;
 use App\Http\Controllers\Api\JobDetailController;
+use App\Http\Controllers\Api\EmployeeProfile;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\EventsController;
 use App\Http\Controllers\Api\LeaveManagementController;
+use App\Http\Controllers\Api\EmployeeProfileController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EmployeeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,13 +28,17 @@ use App\Http\Controllers\Api\DashboardController;
 Route::controller(AuthController::class)->group(function(){
     Route::post("signup","register");
     Route::post("login","login")->name('login');
+    Route::post("employee/login","login")->name('login');
     Route::get("token-check","checkToken")->name('token-check')->middleware('isBanned');
 });
 
+
+
 Route::middleware('auth:api')->group(function () {
     // Protected route to get the authenticated user
-    Route::get('/user', function (Request $request) {
-        return $request->user();
+    Route::get('/employee', function (Request $request) {
+        Route::post('update/profile', [AuthController::class, 'employeeupdate_profile']);
+  
     });
    
     // Protected route for logout
@@ -62,13 +69,12 @@ Route::middleware('auth:api')->group(function () {
 
     // TIMERS  DATA 
     Route::post('projects/timers/get', [TimerController::class, 'get']);
-    Route::post('projects/timers/stop/{id}', [TimerController::class, 'stopRunning']);
-    Route::post('projects/timers/store/{id}', [TimerController::class, 'store']);
-    Route::get('projects/timers/active/{id}', [TimerController::class, 'running']);
-    Route::get('projects/timers/pause/{id}', [TimerController::class, 'pause']);
-    Route::post('projects/timers/screenshot/{timer_id},{project_id}', [TimerController::class, 'take_screeshot']);
-    
-    // Leave Management
+    Route::get('projects/timers/punchin', [TimerController::class, 'punch_in']);
+    Route::get('projects/timers/punchout', [TimerController::class, 'punch_out']);
+    Route::post('projects/timers/screenshot', [TimerController::class, 'take_screeshot']);
+    Route::get('projects/timers/get/detail', [TimerController::class,'get_detail']);
+ 
+    // Leave  Management
     Route::post('add/leave', [LeaveManagementController::class, 'create']);
     Route::get('edit/leave/{id}', [LeaveManagementController::class, 'edit']);
     Route::get('get/leaves', [LeaveManagementController::class, 'index']);
@@ -83,7 +89,7 @@ Route::middleware('auth:api')->group(function () {
      Route::get('edit/events/{id}', [EventsController::class, 'edit']);
      Route::get('get/events', [EventsController::class, 'index']);
      Route::post('update/events', [EventsController::class, 'update']);
-      // Dashboard
+      // Dashboard 
      Route::get('dashboard', [DashboardController::class, 'index']);
  
      // Job Details
@@ -91,5 +97,18 @@ Route::middleware('auth:api')->group(function () {
      Route::post('update/eduction/details', [JobDetailController::class,'education_details']);
      Route::post('update/work-experience', [JobDetailController::class,'work_experience']);
      Route::post('update/salary-detail', [JobDetailController::class,'salary_detail']);
-});  
+    
+    // Employee Profile data 
+    Route::post('add/employe/profile', [EmployeeProfileController::class, 'create']);
+    Route::get('edit/employe/profile/{id}', [EmployeeProfileController::class, 'edit']);
+    Route::get('get/employe/profile', [EmployeeProfileController::class, 'index']);
+    Route::post('update/employe/profile', [EmployeeProfileController::class, 'update']);
 
+    // EMPLOYEE  CREATE DATA 
+    Route::post('create/employee', [EmployeeController::class, 'create']);
+    Route::post('update/employee', [EmployeeController::class, 'update']);
+    Route::get('get/employee', [EmployeeController::class, 'get_employee']);
+    Route::get('get/all/employee', [EmployeeController::class, 'get_allemployee']);
+    Route::post('delete/employee', [EmployeeController::class, 'delete_employee']);
+});  
+      
