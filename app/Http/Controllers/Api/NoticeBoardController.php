@@ -3,45 +3,43 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use Illuminate\Http\Request;
-use App\Models\PoliciesManagement;    
+use App\Models\NoticeBoard;    
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-class PoliciesManagementController extends Controller
+class NoticeBoardController extends Controller
 {
     public function index()
     {
         $user = auth()->user();
-        $policies =  PoliciesManagement::all();
+        $notice_board =  NoticeBoard::all();
         return response()->json([
          'result' => true,
-         'message' => 'Policies Lists.',
-         'data'=>$policies,
+         'message' => 'Notice board Lists.',
+         'data'=>$notice_board,
         ]);
     }
-
+   
      /** 
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required',
             'title' => 'required',
             'description' => 'required',
-            'exception' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $policies = $this->store($request->all());
-        if ($policies) {
+        $notice_board = $this->store($request->all());
+        if ($notice_board) {
             return response()->json([
                 'result' => true,
-                'message' => 'Policies Created successful.',
+                'message' => 'Notice board Created successful.',
                 
             ]);
         } else {
-            return $this->registrationFailed("Policies Created failed");
+            return $this->registrationFailed("Notice board Created failed");
         }
     }  
 
@@ -51,11 +49,12 @@ class PoliciesManagementController extends Controller
     public function store($data)
     {
         $user = auth()->user();
-        $project_data = PoliciesManagement::create([
-            'name' => $data['name'],
+        $notice_board = NoticeBoard::create([
+            'title' => $data['title'],
+            'description' => $data['description'],
             'user_id' => $user->id,
         ]);
-         return $project_data;
+         return $notice_board;
     }
     protected function registrationFailed($message)
     {
@@ -72,19 +71,20 @@ class PoliciesManagementController extends Controller
     public function edit(Request $request,$id)
     {
         $user = auth()->user();
-        $projects =  PoliciesManagement::where('id',$id)->where('user_id',$user->id)->get();
+        $projects =  NoticeBoard::where('id',$id)->where('user_id',$user->id)->get();
         return response()->json([
          'result' => true,
-         'message' => 'project detail data',
+         'message' => 'Notice Board detail data',
          'data'=>$projects,
      ]);
     }
     public function update_data($data)
     {
-        $project_data = PoliciesManagement::where('id',$data['id'])->update([
-            'name' => $data['name'],
+        $notice_board = NoticeBoard::where('id',$data['id'])->update([
+           'title' => $data['title'],
+            'description' => $data['description'],
         ]);
-         return $project_data;
+         return $notice_board;
     }
     /**
      * Update the specified resource in storage.
@@ -92,16 +92,17 @@ class PoliciesManagementController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'title' => 'required',
+            'descriptionn' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $projects = $this->update_data($request->all());
-        if ($projects) {
+        $notice_board = $this->update_data($request->all());
+        if ($notice_board) {
             return response()->json([
                 'result' => true,
-                'message' => 'Project Updated Successful.',
+                'message' => 'NOtice Board Updated Successful.',
                 
             ]);
         } else {

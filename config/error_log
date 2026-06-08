@@ -1,0 +1,100 @@
+[09-Nov-2024 12:34:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[09-Jan-2025 12:57:05 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[26-Feb-2025 19:19:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/cache.php on line 18
+[08-Apr-2025 18:05:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[09-Apr-2025 10:38:16 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[16-Jun-2025 02:36:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[16-Jun-2025 02:36:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[16-Jun-2025 02:37:52 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[16-Jun-2025 02:37:57 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[20-Jun-2025 03:54:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[20-Jun-2025 03:55:04 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[20-Jun-2025 03:58:00 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[20-Jun-2025 03:58:09 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[22-Jun-2025 04:18:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[22-Jun-2025 04:18:25 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[22-Jun-2025 04:20:22 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[22-Jun-2025 04:20:34 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[30-Jun-2025 13:45:02 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[30-Jun-2025 13:45:11 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[30-Jun-2025 13:49:00 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[30-Jun-2025 13:49:14 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[03-Jul-2025 07:36:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[03-Jul-2025 07:36:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/database.php on line 18
+[03-Jul-2025 07:37:49 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19
+[03-Jul-2025 07:37:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php:19
+Stack trace:
+#0 {main}
+  thrown in /home3/spartylb/hrmsdb.spartanstaging.site/config/app.php on line 19

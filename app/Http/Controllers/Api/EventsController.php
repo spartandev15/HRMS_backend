@@ -21,7 +21,7 @@ class EventsController extends Controller
         'data'=>$events,
       ]);
     }
-   
+       
     /**
      * Show the form for creating a new resource.
      */
@@ -39,13 +39,12 @@ class EventsController extends Controller
             return response()->json([
                 'result' => true,
                 'message' => 'Events Created successful.',
-                
             ]);
         } else {
             return $this->registrationFailed("created failed");
         }
     }
-      
+         
     /**
      * Store a newly created resource in storage.
      */
@@ -53,11 +52,13 @@ class EventsController extends Controller
     {
         $user = auth()->user();
         $events_data = Events::create([
+            'title' => $data['title'],
+            'date' => $data['eventDate'],
+                'eventTime' => $data['eventTime'],
+                'location' => $data['location'],
                 'description' => $data['description'],
-                'title' => $data['title'],
                 'members' => $data['members'],
                 'status' => $data['status'],
-                'date' => date('d-m-y'),
                 'user_id' => $user->id,
         ]);
          return $events_data;
@@ -81,11 +82,11 @@ class EventsController extends Controller
 
     /**
      * Show the form for editing the specified resource.
-     */
+     */    
     public function edit(Request $request,$id)
     {
         $user = auth()->user();
-        $events_data =  Events::where('id',$id)->where('user_id',$user->id)->get();
+        $events_data =  Events::where('id',$id)->get();
         return response()->json([
          'result' => true,
          'message' => 'Events detail data',
@@ -95,9 +96,14 @@ class EventsController extends Controller
     public function update_data($data)
     {
         $events_data = Events::where('id',$data['id'])->update([
-            'description' => $data['description'],
-                'title' => $data['title'],
-                 'members' => $data['members'],
+            'title' => $data['title'],
+            'date' => $data['eventDate'],
+                'eventTime' => $data['eventTime'],
+                'location' => $data['location'],
+                'description' => $data['description'],
+                'members' => $data['members'],
+                'status' => $data['status'],
+                
                 ]);
          return $events_data;
     }   
@@ -129,6 +135,11 @@ class EventsController extends Controller
      */
     public function destroy(Holiday $holiday)
     {
-        //
+        $id = $request->id;
+        Events::where('id',$id)->delete();
+        return response()->json([   
+            'result' => true,
+            'message' => 'Events Data are Deleted',
+        ]);
     }
 }

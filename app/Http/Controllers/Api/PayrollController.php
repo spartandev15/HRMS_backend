@@ -1,58 +1,56 @@
-<?php
-
+<?php 
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
+use App\Http\Resources\Api\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\EmployeeProfile;                                        
-use Illuminate\Support\Facades\Validator;                 
+use App\Models\LeaveManagement;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon; 
+use App\Models\Events;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Auth;
-class DepartmentController extends Controller
+class PayrollController extends Controller
 {
-    public function index()
-    {
-        $user = auth()->user();
-        $projects =  EmployeeProfile::all();
-        return response()->json([
-         'result' => true,
-         'message' => 'Employee Profile Lists.',
-         'data'=>$projects,
-     ]);
-    }
-
-     /**
+    /** 
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'employee_id' => 'required',
+            'amount' => 'required',
+            'pay_date' => 'required'
         ]);
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $projects = $this->store($request->all());
-        if ($projects) {
+        $payroll = $this->store($request->all());
+        if ($payroll) {
             return response()->json([
                 'result' => true,
-                'message' => 'Project Created successful.',
+                'message' => 'Pay ROll Created successful.',
                 
             ]);
         } else {
-            return $this->registrationFailed("Project Created failed");
+            return $this->registrationFailed("Pay ROll Created failed");
         }
-    }
-   
+    }  
+
     /**
      * Store a newly created resource in storage.
      */
     public function store($data)
     {
         $user = auth()->user();
-        $project_data = EmployeeProfile::create([
-            'name' => $data['name'],
-            'user_id' => $user->id,
+        $payroll = Payrolls::create([
+            'employee_id' => $data['employee_id'],
+            'amount' => $data['amount'],
+            'pay_date' => $data['pay_date'],
         ]);
-         return $project_data;
+       
+         return $payroll;
     }
     protected function registrationFailed($message)
     {
@@ -62,26 +60,28 @@ class DepartmentController extends Controller
            
         ]);
     }
-
+   
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(Request $request,$id)
     {
         $user = auth()->user();
-        $projects =  EmployeeProfile::where('id',$id)->where('user_id',$user->id)->get();
+        $projects =  Payrolls::where('id',$id)->where('employee_id',$user->id)->get();
         return response()->json([
          'result' => true,
-         'message' => 'project detail data',
+         'message' => 'Pay ROll detail data',
          'data'=>$projects,
      ]);
     }
     public function update_data($data)
     {
-        $project_data = EmployeeProfile::where('id',$data['id'])->update([
-            'name' => $data['name'],
+        $payroll = Payrolls::where('id',$data['id'])->update([
+            'employee_id' => $data['employee_id'],
+            'amount' => $data['amount'],
+            'pay_date' => $data['pay_date'],
         ]);
-         return $project_data;
+         return $payroll;
     }
     /**
      * Update the specified resource in storage.
@@ -89,16 +89,17 @@ class DepartmentController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'title' => 'required',
+            'descriptionn' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->registrationFailed($validator->errors()->all());
         }
-        $projects = $this->update_data($request->all());
-        if ($projects) {
+        $payroll = $this->update_data($request->all());
+        if ($payroll) {
             return response()->json([
                 'result' => true,
-                'message' => 'Project Updated Successful.',
+                'message' => 'Pay ROll Updated Successful.',
                 
             ]);
         } else {
@@ -107,3 +108,5 @@ class DepartmentController extends Controller
     }
 
 }
+
+ 

@@ -7,52 +7,43 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, CanResetPassword;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'last_name',
-        'organisation',
-        'organisation_id',
-        'address',
-        'payment',
-        'employee_id',
-        'status',
+        'first_name','last_name', 'email', 'password', 'last_name', 'organisation', 
+        'organisation_id', 'address', 'payment', 'employee_id', 'status',
+        'line_manager', 'designation', 'joining_date','orpect_user_id'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
     public function userDetail(){
         return $this->hasOne(User_Detail::class, 'user_id', 'id');
     }
-    public function JobDetail(){
+
+    public function jobDetail(){
         return $this->hasOne(JobDetail::class, 'user_id', 'id');
     }
-}  
+
+    public function leave(){
+        return $this->hasOne(Leave::class);  // One-to-One relationship with Leave model
+    }
+
+    public function employee(){
+        return $this->hasOne(Employee::class, 'user_id', 'id');
+    }
+
+    public function salary(){
+        return $this->hasOne(Salary::class, 'user_id', 'id');
+    }
+}
+

@@ -15,7 +15,10 @@ class Events extends Model
         'members',
         'description',
         'status',
-        'date'
+        'date',
+        'eventTime',
+        'location'
+       
     ];
 
 }

@@ -15,7 +15,9 @@ class User_Detail extends Model
         'dob',
         'job_title',
         'department',
-        'joining_date',         
+        'tax_number',
+        'phone',
+        'joining_date',
         'emp_id',
         'profile_photo',
         'country',
@@ -25,7 +27,9 @@ class User_Detail extends Model
         'emergency_name',
         'relationship',
         'emergency_phone',
-        'emergency_mobileno',
+        'emergency_mobileno'
     ];
-
+    public function user_info(){
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

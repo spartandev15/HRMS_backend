@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class HolidayController extends Controller
 {
     /**
- 
-    * Display a listing of the resource.
+     * Display a listing of the resource.
      */
     public function index()
     {
@@ -20,9 +19,9 @@ class HolidayController extends Controller
         'result' => true,
         'message' => 'Holiday Created successful.',
         'data'=>$holidays,
-      ]);
+    ]);
     }
-   
+
     /**
      * Show the form for creating a new resource.
      */
