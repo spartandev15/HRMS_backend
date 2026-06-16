@@ -14,6 +14,7 @@ class Notice extends Model
         'description',   // The description of the notice
         'attachment',    // The attachment path (photo, video, document)
         'email',         // A list of employee emails
+        'orpect_user_id'
     ];
     
 }

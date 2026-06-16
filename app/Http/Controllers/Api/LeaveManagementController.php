@@ -57,8 +57,15 @@ class LeaveManagementController extends Controller
         $perPage = $request->input('per_page', 15);  // Default to 15 items per page
         $page = $request->input('page', 1);
 
+        $orpectUserId = auth()->user()->orpect_user_id;
+
+        $leaves = Leave::whereHas('user', function ($q) use ($orpectUserId) {
+                    $q->where('orpect_user_id', $orpectUserId);
+                })
+                ->paginate($perPage, ['*'], 'page', $page);
+
         // Paginate the leaves
-        $leaves = Leave::paginate($perPage, ['*'], 'page', $page);
+        // $leaves = Leave::paginate($perPage, ['*'], 'page', $page);
     
         // Decode the leave_data for each leave record
         $leaves->getCollection()->transform(function ($leave) {

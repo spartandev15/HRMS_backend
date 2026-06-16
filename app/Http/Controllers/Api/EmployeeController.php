@@ -26,6 +26,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;  
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mime\Part\HtmlPart;
+ use Illuminate\Validation\Rule;
 
 
 class EmployeeController extends Controller
@@ -42,7 +43,13 @@ class EmployeeController extends Controller
             'first_name' => 'required|string|max:255',
             'password' => 'required|string|min:6',
             'email' => 'required|email|unique:users,email', // Ensure email is unique in users table
-            'employee_id' => 'required|unique:users,employee_id', // Ensure employee_id is unique in users table
+            // 'employee_id' => 'required|unique:users,employee_id', // Ensure employee_id is unique in users table
+            'employee_id' => [
+                'required',
+                Rule::unique('users', 'employee_id')->where(function ($query) {
+                    return $query->where('orpect_user_id', auth()->user()->orpect_user_id);
+                }),
+            ],
             'basic_salary' => 'required|numeric|min:0',
             'house_rent' => 'required|numeric|min:0',
             'medical_allowance' => 'required|numeric|min:0',
@@ -80,7 +87,7 @@ class EmployeeController extends Controller
     }
     public function OrpectSYncEmployeeUpdate(Request $request){
         $data = $request->all();
-        $user = $this->syncUpdateData($data);
+        $user = $this->syncUpdateData($request);
         if ($user) {
             return response()->json([
                 'result' => true,
@@ -91,31 +98,149 @@ class EmployeeController extends Controller
             return $this->registrationFailed("Registration failed");
         }
     }
-   protected function syncUpdateData(Request $request)
+
+    protected function syncUpdateData(Request $request)
 {
-    $profilePhotoPath = '';
+    $data = $request->all();
 
-    $employee = Employee::where([
-        'orpect_employee_id' => $request->orpect_employee_id,
-        // 'orpect_user_id' => $request->orpect_user_id,
-    ])->update([
+    // Step 1: employee_id se employee dhundho (orpect wala emp_id)
+    $employee_data = Employee::where('employee_id', $data['employee_id'])->first();
 
-        'user_id' => $request->id,
-        'first_name' => $request->first_name,
-        'last_name' => $request->last_name,
-        'date_of_birth' => $request->date_of_birth ?? '',
-        'designation' => $request->designation,
-        'employee_id' => $request->employee_id,
-        'email' => $request->email,
-        'joining_date' => $request->joining_date,
-        'phone' => $request->phone,
-        'password' => Hash::make($request->password),
-        'profile_photo' => $profilePhotoPath ?? '',
+    if (!$employee_data) {
+        return null;
+    }
 
+    // ===== USERS TABLE =====
+    $user_update_data = [];
+    if (!empty($data['first_name']))   $user_update_data['first_name']   = $data['first_name'];
+    if (!empty($data['last_name']))    $user_update_data['last_name']     = $data['last_name'];
+    if (!empty($data['email']))        $user_update_data['email']         = $data['email'];
+    if (!empty($data['designation']))  $user_update_data['designation']   = $data['designation'];
+    if (!empty($data['employee_id']))  $user_update_data['employee_id']   = $data['employee_id'];
+    if (!empty($data['joining_date'])) $user_update_data['joining_date']  = $data['joining_date'];
+
+    if (!empty($user_update_data)) {
+        User::where('id', $employee_data->user_id)->update($user_update_data);
+    }
+
+    // ===== EMPLOYEES TABLE =====
+    $employee_update_data = [];
+    if (!empty($data['first_name']))    $employee_update_data['first_name']    = $data['first_name'];
+    if (!empty($data['last_name']))     $employee_update_data['last_name']     = $data['last_name'];
+    if (!empty($data['email']))         $employee_update_data['email']         = $data['email'];
+    if (!empty($data['date_of_birth'])) $employee_update_data['date_of_birth'] = $data['date_of_birth'];
+    if (!empty($data['designation']))   $employee_update_data['designation']   = $data['designation'];
+    if (!empty($data['address']))       $employee_update_data['address']       = $data['address'];
+    if (!empty($data['employee_id']))   $employee_update_data['employee_id']   = $data['employee_id'];
+    if (!empty($data['joining_date']))  $employee_update_data['joining_date']  = $data['joining_date'];
+    if (!empty($data['phone']))         $employee_update_data['phone']         = $data['phone'];
+
+    if (!empty($employee_update_data)) {
+        Employee::where('id', $employee_data->id)->update($employee_update_data);
+    }
+
+    // ===== LEAVES TABLE =====
+    $existing_leave = Leave::where('user_id', $employee_data->user_id)->first();
+
+    if ($existing_leave) {
+        $leave_data = json_decode($existing_leave->leave_data, true);
+    } else {
+        $leave_data = [
+            'paid_leaves'   => ['Taken' => 0, 'Total' => 6, 'Pending' => 6],
+            'sick_leaves'   => ['Taken' => 0, 'Total' => 6, 'Pending' => 6],
+            'unpaid_leaves' => ['Taken' => 0, 'Total' => 6, 'Pending' => 6],
+        ];
+    }
+
+    if (isset($data['paid_leaves']))   $leave_data['paid_leaves']['Total']   = $data['paid_leaves'];
+    if (isset($data['sick_leaves']))   $leave_data['sick_leaves']['Total']   = $data['sick_leaves'];
+    if (isset($data['unpaid_leaves'])) $leave_data['unpaid_leaves']['Total'] = $data['unpaid_leaves'];
+
+    $leave_data['paid_leaves']['Pending']   = $leave_data['paid_leaves']['Total']   - $leave_data['paid_leaves']['Taken'];
+    $leave_data['sick_leaves']['Pending']   = $leave_data['sick_leaves']['Total']   - $leave_data['sick_leaves']['Taken'];
+    $leave_data['unpaid_leaves']['Pending'] = $leave_data['unpaid_leaves']['Total'] - $leave_data['unpaid_leaves']['Taken'];
+
+    $overall_total   = $leave_data['paid_leaves']['Total']  + $leave_data['sick_leaves']['Total']  + $leave_data['unpaid_leaves']['Total'];
+    $overall_taken   = $leave_data['paid_leaves']['Taken']  + $leave_data['sick_leaves']['Taken']  + $leave_data['unpaid_leaves']['Taken'];
+    $overall_pending = $overall_total - $overall_taken;
+
+    Leave::where('user_id', $employee_data->user_id)->update([
+        'leave_data'          => json_encode($leave_data),
+        'overall_total_leaves'=> $overall_total,
+        'taken'               => $overall_taken,
+        'pending'             => $overall_pending,
     ]);
 
-    return $employee;
+    // ===== SALARY TABLE =====
+    $salary_update_data = [];
+    if (!empty($data['first_name']) || !empty($data['last_name']))
+        $salary_update_data['employee_name'] = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+    if (!empty($data['basic_salary']))       $salary_update_data['basic_salary']       = $data['basic_salary'];
+    if (!empty($data['house_rent']))         $salary_update_data['house_rent']         = $data['house_rent'];
+    if (!empty($data['medical_allowance']))  $salary_update_data['medical_allowance']  = $data['medical_allowance'];
+    if (!empty($data['tax']))                $salary_update_data['tax']                = $data['tax'];
+    if (!empty($data['leave_deduction']))    $salary_update_data['leave_deduction']    = $data['leave_deduction'];
+    if (!empty($data['pf']))                 $salary_update_data['pf']                 = $data['pf'];
+    if (!empty($data['insurance']))          $salary_update_data['insurance']          = $data['insurance'];
+    if (!empty($data['extra_working']))      $salary_update_data['extra_working']      = $data['extra_working'];
+    if (!empty($data['gross_total']))        $salary_update_data['gross_total']        = $data['gross_total'];
+    if (!empty($data['final_total']))        $salary_update_data['final_total']        = $data['final_total'];
+    if (!empty($data['gross_salary']))       $salary_update_data['gross_salary']       = $data['gross_salary'];
+    if (!empty($data['bank_name']))          $salary_update_data['bank_name']          = $data['bank_name'];
+    if (!empty($data['bank_ifsc']))          $salary_update_data['bank_ifsc']          = $data['bank_ifsc'];
+    if (!empty($data['account_number']))     $salary_update_data['account_number']     = $data['account_number'];
+    if (!empty($data['account_holder_name']))$salary_update_data['account_holder_name']= $data['account_holder_name'];
+
+    if (!empty($salary_update_data)) {
+        Salary::where('user_id', $employee_data->user_id)->update($salary_update_data);
+    }
+
+    // ===== USER_DETAILS TABLE =====
+    $user_detail_update_data = [];
+    if (!empty($data['phone']))            $user_detail_update_data['phone']            = $data['phone'];
+    if (!empty($data['joining_date']))     $user_detail_update_data['joining_date']     = $data['joining_date'];
+    if (!empty($data['country']))          $user_detail_update_data['country']          = $data['country'];
+    if (!empty($data['city']))             $user_detail_update_data['city']             = $data['city'];
+    if (!empty($data['state']))            $user_detail_update_data['state']            = $data['state'];
+    if (!empty($data['zip_code']))         $user_detail_update_data['zipcode']          = $data['zip_code'];
+    if (!empty($data['emergency_name']))   $user_detail_update_data['emergency_name']   = $data['emergency_name'];
+    if (!empty($data['relationship']))     $user_detail_update_data['relationship']     = $data['relationship'];
+    if (!empty($data['emergency_phone']))  $user_detail_update_data['emergency_phone']  = $data['emergency_phone'];
+
+    if (!empty($user_detail_update_data)) {
+        User_Detail::where('user_id', $employee_data->user_id)->update($user_detail_update_data);
+    }
+
+    // ===== FINAL RETURN =====
+    return User::with(['userDetail', 'employee', 'salary', 'leave'])
+                ->where('id', $employee_data->user_id)
+                ->first();
 }
+//    protected function syncUpdateData(Request $request)
+// {
+//     $profilePhotoPath = '';
+
+//     $employee = Employee::where([
+//         'employee_id' => $request->employee_id,
+//         // 'orpect_user_id' => $request->orpect_user_id,
+//     ])->update([
+
+//         'user_id' => $request->id,
+//         'first_name' => $request->first_name,
+//         'last_name' => $request->last_name,
+//         'date_of_birth' => $request->date_of_birth ?? '',
+//         'designation' => $request->designation,
+//         'employee_id' => $request->employee_id,
+//         'email' => $request->email,
+//         'joining_date' => $request->joining_date,
+//         'phone' => $request->phone,
+//         'password' => Hash::make($request->password),
+//         'profile_photo' => $profilePhotoPath ?? '',
+
+//     ]);
+
+//     return $employee;
+// }
     public function OrpectSYncEmployee(Request $request)
     {
           
@@ -235,7 +360,7 @@ class EmployeeController extends Controller
                 'Leaves Data' => $leaveData,
                 'Salary Data' => $salaryData,
             ];    
-            return $finalData;
+            return $user->id;
         // }
         // return null;
     }
@@ -246,11 +371,13 @@ class EmployeeController extends Controller
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'email' => $data['email'],
-                'status' => $data['role'],
+                'status' => $data['role'] ?? 'employee',
                 'password' => Hash::make($data['password']),
-               'designation' =>  $data['role'],
+               'designation' =>  $data['designation'] ?? '',
                 'employee_id' => $data['employee_id'],
+                'orpect_user_id' => Auth::user()->orpect_user_id
             ]);
+            // dd(Auth::user()->orpect_user_id);
     
             // Handle profile photo upload (if provided)
             $profilePhotoPath = null;
@@ -275,13 +402,17 @@ class EmployeeController extends Controller
                 'user_id' => $user->id,
                 'joining_date' => $data['joining_date'],
                 'profile_photo' => $profilePhotoPath, // Store the full URL of the profile photo
+                'state' => $data['state'] ?? '',
+                'zipcode' => $data['zip_code'] ?? '',
+                'city' => $data['city'] ?? '',
+                'country' => $data['country'] ?? '',
             ]);
             $employee = Employee::create([
                 'user_id' => $user->id,
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'date_of_birth' => $data['date_of_birth'] ?? '',
-                'designation' => $data['role'],
+                'designation' => $data['designation'] ?? '',
                 'employee_id' => $data['employee_id'],
                 'email' => $data['email'],
                 'joining_date' => $data['joining_date'],
@@ -338,10 +469,11 @@ class EmployeeController extends Controller
                 'account_number' => $data['account_number'],
                 'account_holder_name' => $data['account_holder_name'],
             ]);
-            $data['added_by']=$user->id;
+            $data['added_by']=$user->orpect_user_id;
+            $data['main_id']= $user->id;
             // dd($data);
             $dataemployeee =   $this->syncEmployeeToOrpect($data);
-            dd($dataemployeee);
+            // dd($dataemployeee);
             $finalData = [
                 'User Details' => $user,
                 'Employee' => $employee,  // Now returning employee data as well
@@ -366,7 +498,9 @@ class EmployeeController extends Controller
         }
 
         $user = $this->updated_data($request->all());
+        
         if ($user) {
+           
             $leaveData = json_decode($user->leave->leave_data);    
             return response()->json([
                 'result' => true,
@@ -385,7 +519,7 @@ class EmployeeController extends Controller
     {
         // Find the employee data based on the ID
         $employee_data = Employee::where('id', $data['id'])->first();
-    
+
         // If no employee found, return null
         if (!$employee_data) {
             return null;
@@ -398,6 +532,7 @@ class EmployeeController extends Controller
         if (!empty($data['first_name'])) $user_update_data['first_name'] = $data['first_name'];
         if (!empty($data['last_name'])) $user_update_data['last_name'] = $data['last_name'];
         if (!empty($data['email'])) $user_update_data['email'] = $data['email'];  // Email is common for both
+        if (!empty($data['address'])) $user_update_data['address'] = $data['address'];
         if (!empty($data['status'])) $user_update_data['status'] = 'employee';  // Assuming status should always be 'employee' for employees
         if (!empty($data['designation'])) $user_update_data['designation'] = $data['designation'];
         if (!empty($data['employee_id'])) $user_update_data['employee_id'] = $data['employee_id'];
@@ -428,6 +563,7 @@ class EmployeeController extends Controller
         if (!empty($data['email'])) $employee_update_data['email'] = $data['email']; // Email is common for both
         if (!empty($data['date_of_birth'])) $employee_update_data['date_of_birth'] = $data['date_of_birth'];  // Date of birth is common for both
         if (!empty($data['designation'])) $employee_update_data['designation'] = $data['designation'];
+        if (!empty($data['address'])) $employee_update_data['address'] = $data['address'];
         if (!empty($data['employee_id'])) $employee_update_data['employee_id'] = $data['employee_id'];
         if (!empty($data['joining_date'])) $employee_update_data['joining_date'] = $data['joining_date'];  // Joining date is common
         if (!empty($data['phone'])) $employee_update_data['phone'] = $data['phone'];
@@ -508,10 +644,12 @@ class EmployeeController extends Controller
         $overall_pending = $overall_total_leaves - $overall_taken;
         
         // Update leave_update_data with recalculated overall totals
+        if (!empty($data['first_name']) || !empty($data['last_name'])) $leave_update_data['emp_name'] = trim($data['first_name'] . ' ' . $data['last_name']);
         $leave_update_data['leave_data'] = json_encode($leave_data);
         $leave_update_data['overall_total_leaves'] = $overall_total_leaves;
         $leave_update_data['taken'] = $overall_taken;
         $leave_update_data['pending'] = $overall_pending;
+        // $leave_update_data['emp_name'] = $data['first_name'] .' '.$data['last_name'] ;
         
         // Update the Leave model with the modified leave data
         if (!empty($leave_update_data)) {
@@ -562,7 +700,7 @@ class EmployeeController extends Controller
         if (!empty($data['country'])) $user_detail_update_data['country'] = $data['country'];
         if (!empty($data['city'])) $user_detail_update_data['city'] = $data['city'];
         if (!empty($data['state'])) $user_detail_update_data['state'] = $data['state'];
-        if (!empty($data['zipcode'])) $user_detail_update_data['zipcode'] = $data['zipcode'];
+        if (!empty($data['zip_code'])) $user_detail_update_data['zipcode'] = $data['zip_code'];
         if (!empty($data['emergency_name'])) $user_detail_update_data['emergency_name'] = $data['emergency_name'];
         if (!empty($data['relationship'])) $user_detail_update_data['relationship'] = $data['relationship'];
         if (!empty($data['emergency_phone'])) $user_detail_update_data['emergency_phone'] = $data['emergency_phone'];
@@ -575,7 +713,7 @@ class EmployeeController extends Controller
     
         // Fetch all updated details of the user
         $user = User::with(['userDetail', 'employee', 'salary', 'leave'])->where('id', $employee_data->user_id)->first();
-    
+     $dataemployeee =   $this->syncEmployeeToOrpectUpdate($data);
         // Return the updated user details as an array of objects
         return $user;
     }
@@ -642,6 +780,7 @@ class EmployeeController extends Controller
 
     public function delete_employee(Request $request)
     {
+
         $id = $request->id;
         $user = User::where('id', $id)->first();
         if (!is_null($user)) {
@@ -658,9 +797,10 @@ class EmployeeController extends Controller
                 $user->leaves->delete();  // Delete the related leave record
             }
             
+            $dataemployeee =   $this->syncEmployeeToOrpectDelete($user);
+           
             // Delete the employee
             $user->delete();
-            
             return response()->json([   
                 'result' => true,
                 'message' => 'Employee and all related data are deleted',
@@ -672,11 +812,66 @@ class EmployeeController extends Controller
             ]);
         }
     }
+   
+
+
+    private function syncEmployeeToOrpectDelete($data)
+    {
+        $url = 'https://spartanbots.xyz/borpact/public/api/hrms-delete-employee';
+
+        $payload = [
+
+            'empId' => $data['employee_id'],
+
+            'empName' => trim(
+                ($data['first_name'] ?? '') . ' ' .
+                ($data['last_name'] ?? '')
+            ),
+
+            'hrms_employee_id' => $data['id']
+        ];
+
+        $ch = curl_init();
+
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ],
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+
+        $response = curl_exec($ch);
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+
+            dd([
+                'Curl Error' => curl_error($ch)
+            ]);
+        }
+
+        curl_close($ch);
+
+        // dd([
+        //     'HTTP_CODE' => $httpCode,
+        //     'RAW_RESPONSE' => $response,
+        //     'JSON_RESPONSE' => json_decode($response, true),
+        //     'PAYLOAD' => $payload
+        // ]);
+    }
     public function OrpectSYncEmployeeDelete(Request $request)
     {
-        $id = $request->orpect_user_id;
-        $id = $request->orpect_employee_id;
-        $user = User::where('orpect_user_id', $id)->first();
+
+    //    $id = User::where('employee_id', $request->employee_id)
+    //           ->value('id');
+        // $id = $request->orpect_employee_id;
+        $user = User::where('id', $request->employee_id)->first();
         if (!is_null($user)) {  
             // Delete related records
             User::where('id', $user->id)->delete();
@@ -762,6 +957,7 @@ class EmployeeController extends Controller
         $responseData = [
             'result' => true,
             'message' => 'User data retrieved successfully!',
+    
             'user' => [
                 'user_details' => [
                     'user_id' => $employee->user_id,
@@ -778,6 +974,13 @@ class EmployeeController extends Controller
                     'designation' => $employee->user->designation,  // Access 'designation' from the 'user' relationship
                     'joining_date' => $employee->joining_date,  // Access 'joining_date' from the 'user' relationship
                     'profile_photo' => isset($employee->userDetail->profile_photo) ? url($employee->userDetail->profile_photo) : null,  // Add profile photo URL
+                ],
+                'additional_details' => [
+                    'address' => $employee->user->address,
+                    'state' => $employee->userDetail->state, 
+                    'country' => $employee->userDetail->country,
+                    'city' => $employee->userDetail->city,  
+                    'zip_code' => $employee->userDetail->zipcode, 
                 ],
                 'leaves_data' => [
                     'user_id' => $employee->user_id,
@@ -821,9 +1024,13 @@ class EmployeeController extends Controller
     
         // Define how many records you want per page (e.g., 10)
         $perPage = $request->input('per_page', 10); // Default to 10 items per page
-    
+
+        $orpectUserId = auth()->user()->orpect_user_id;
         // Fetch employee data along with the related user data using eager loading
         $employees = Employee::with('user') // Eager load the 'user' relationship
+            ->whereHas('user', function ($q) use ($orpectUserId) {
+                $q->where('orpect_user_id', $orpectUserId);
+            })
             ->orderByRaw("MONTH(date_of_birth), DAY(date_of_birth)") // Sort by month and day
             ->get()
             ->map(function($employee) use ($today) {
@@ -914,8 +1121,13 @@ class EmployeeController extends Controller
             $perPage = $request->input('per_page', 10); // Default to 10 items per page
             $page = $request->input('page', 1);
 
+            $orpectUserId = auth()->user()->orpect_user_id;
+
             // Fetch employee data along with the related user data using eager loading
             $employeesPaginator = Employee::with('user') // Eager load the 'user' relationship
+                ->whereHas('user', function ($q) use ($orpectUserId) {
+                    $q->where('orpect_user_id', $orpectUserId);
+                })
                 ->orderByRaw("MONTH(joining_date), DAY(joining_date)") // Sort by month and day of joining_date
                 ->paginate($perPage, ['*'], 'page', $page); // Apply pagination
     
@@ -1312,6 +1524,7 @@ class EmployeeController extends Controller
 
     public function createNotice(Request $request)
     {
+       
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required',
@@ -1347,7 +1560,9 @@ class EmployeeController extends Controller
             'attachment' => isset($attachmentUrl) ? $attachmentUrl : null,  // Save the full URL to the attachment
             'status' => $request->input('status'),
             'email' => $request->input('email'),  // Store the email as a string (comma-separated)
+            'orpect_user_id' => auth()->user()->orpect_user_id,
         ]);
+
 
         // Convert the email string to an array
         $emails = explode(',', $request->input('email'));
@@ -1396,7 +1611,12 @@ class EmployeeController extends Controller
     public function getEmails()
     {
         // Fetch all emails from Employee model
-        $emails = Employee::pluck('email');
+         $orpectUserId = auth()->user()->orpect_user_id;
+        // $emails = Employee::pluck('email');
+         $emails = Employee::whereHas('user', function ($q) use ($orpectUserId) {
+                    $q->where('orpect_user_id', $orpectUserId);
+                })
+                ->pluck('email');
         
         // Return a structured JSON response
         return response()->json([
@@ -1430,7 +1650,9 @@ class EmployeeController extends Controller
 
     public function getAllNotices()
     {
-        $notices = Notice::all();
+        $orpectUserId = auth()->user()->orpect_user_id;
+        $notices = Notice::where('orpect_user_id', $orpectUserId)->get();
+        // $notices = Notice::all();
 
         if ($notices->isEmpty()) {
             return response()->json(['message' => 'No notices found.'], 404);
@@ -1509,14 +1731,33 @@ class EmployeeController extends Controller
     // Get the current page (default to 1 if not provided)
     $page = $request->input('page', 1);
 
-    // Build the query
-    $query = Employee::with(['userDetail', 'leaves', 'salary']);
+    // Logged in user ka orpect_user_id lo
+    $orpectUserId = auth()->user()->orpect_user_id;
 
+    // Build the query
+    // $query = Employee::with(['userDetail', 'leaves', 'salary']);
+    // Base query with company filter
+    $query = Employee::with(['userDetail', 'leaves', 'salary'])
+                ->whereHas('user', function ($q) use ($orpectUserId) {
+                    $q->where('orpect_user_id', $orpectUserId);
+                });
+
+    // $query = Employee::join('users', 'employees.user_id', '=', 'users.id')
+    //         ->where('users.orpect_user_id', $orpectUserId)
+    //          ->select('employees.*');
+    
     // If a search query is provided, apply the filter for employee_id
-    if ($searchQuery) {
-        $query->whereHas('user', function ($query) use ($searchQuery) {
-            // Apply case-insensitive search
-            $query->whereRaw('LOWER(employee_id) LIKE ?', ['%' . strtolower($searchQuery) . '%']);
+    // if ($searchQuery) {
+    //     $query->whereHas('user', function ($query) use ($searchQuery) {
+    //         // Apply case-insensitive search
+    //         $query->whereRaw('LOWER(employee_id) LIKE ?', ['%' . strtolower($searchQuery) . '%']);
+    //     });
+    // }
+
+     if ($searchQuery) {
+        $query->whereHas('user', function ($q) use ($searchQuery, $orpectUserId) {
+            $q->where('orpect_user_id', $orpectUserId)
+              ->whereRaw('LOWER(employee_id) LIKE ?', ['%' . strtolower($searchQuery) . '%']);
         });
     }
 
@@ -1568,12 +1809,15 @@ class EmployeeController extends Controller
         ]
     ]);
 }
+
 public function export_employee(Request $request){
     // $query = Employee::with(['userDetail', 'leaves', 'salary']);
     // downloafd excel sheet showing emplo
 }
+
 private function syncEmployeeToOrpect($data)
 {
+   
     $url = 'https://spartanbots.xyz/borpact/public/api/hrms-sync-employee';
 
     $payload = [
@@ -1589,7 +1833,7 @@ private function syncEmployeeToOrpect($data)
 
         'phone' => $data['phone'],
 
-        'position' => $data['role'],
+        'position' => $data['designation'] ?? null,
 
         'dateOfJoining' => $data['joining_date'],
 
@@ -1611,7 +1855,7 @@ private function syncEmployeeToOrpect($data)
 
         'added_by' => $data['added_by'],
 
-        'hrms_employee_id' => $data['employee_id']
+        'hrms_employee_id' => $data['main_id']
     ];
 
     $ch = curl_init();
@@ -1649,5 +1893,75 @@ private function syncEmployeeToOrpect($data)
     // ]);
 }
 
+  private function syncEmployeeToOrpectUpdate($data){
+    $url = 'https://spartanbots.xyz/borpact/public/api/hrms-sync-employeeUpdate';
 
+    $payload = [
+
+        'empId' => $data['employee_id'],
+
+        'empName' => trim(
+            ($data['first_name'] ?? '') . ' ' .
+            ($data['last_name'] ?? '')
+        ),
+
+        'email' => $data['email'],
+
+        'phone' => $data['phone'],
+
+        'position' => $data['designation'],
+
+        'dateOfJoining' => $data['joining_date'],
+
+        'dateOfBirth' => $data['date_of_birth'] ?? null,
+
+        'state' => $data['employee_state'] ?? null,
+
+        'current_salaray' => $data['basic_salary'] ?? 0,
+
+        'tax_number' => null,
+        'permanentAddress' => null,
+        'city' => null,
+        'country' => null,
+        'postalCode' => null,
+        'linkedIn' => null,
+        'increment_date' => null,
+        'last_increment_date' => null,
+        'pan_number' => null,
+
+        'added_by' => Auth::user()->orpect_user_id,
+
+        'hrms_employee_id' => $data['employee_id']
+    ];
+
+    $ch = curl_init();
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ],
+        CURLOPT_SSL_VERIFYPEER => false,
+    ]);
+
+    $response = curl_exec($ch);
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if (curl_errno($ch)) {
+
+        dd([
+            'Curl Error' => curl_error($ch)
+        ]);
+    }
+
+    curl_close($ch);
+
+   
+
+    }
 }

@@ -43,8 +43,10 @@ class CategoryController extends Controller
     public function store($data)
 
     {
+        
         $category_data = Category::create([
             'name' => $data['name'],
+            'orpect_user_id' => auth()->user()->orpect_user_id
         ]);
          return $category_data;
     }
@@ -109,7 +111,11 @@ class CategoryController extends Controller
     $perPage = 5; // You can change this to any number of records per page you want
 
     // Paginate the categories, 5 categories per page
-    $category_data = Category::paginate($perPage, ['*'], 'page', $page);
+    $orpectUserId = auth()->user()->orpect_user_id;
+
+    // $category_data = Category::paginate($perPage, ['*'], 'page', $page);
+    $category_data = Category::where('orpect_user_id', $orpectUserId)
+                    ->paginate($perPage, ['*'], 'page', $page);
     
     // Check if there are any categories
     if ($category_data->isEmpty()) {

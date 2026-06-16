@@ -19,5 +19,9 @@ class Leave extends Model
     public function employee(){
         return $this->belongsTo(Employee::class, 'user_id'); // Assuming user_id is the foreign key
     }
+
+    public function user() {
+    return $this->belongsTo(User::class, 'user_id');
+}
     
 }

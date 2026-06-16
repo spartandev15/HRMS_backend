@@ -95,7 +95,7 @@ class AuthController extends Controller{
                 'email_verified_at' => null,
                 'status'          => 'owner',
                 // 'phone'        => validatePhone($data['phone']),
-                'password'        => Hash::make($data['password']),
+                'password'        => $data['password'],
             ]
         );
 

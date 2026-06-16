@@ -18,7 +18,8 @@ class Interview extends Model
         'interview_date',
         'interview_time',
         'interviewer_name',
-        'interviewer_email'
+        'interviewer_email',
+        'orpect_user_id',
     ];
 
 }

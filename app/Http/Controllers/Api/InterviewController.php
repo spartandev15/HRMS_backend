@@ -60,6 +60,7 @@ class InterviewController extends Controller
             'timezone'          => $request->input('timezone'),
             'notes'             => $request->input('notes'),
             'consent_to_record' => $request->input('consent_to_record'),
+            'orpect_user_id' => auth()->user()->orpect_user_id,
         ]);
         if ($interview->save()) {
             // Email template function
@@ -120,7 +121,10 @@ class InterviewController extends Controller
     // Get all scheduled interviews
     public function getAllInterviews()
     {
-        $interviews = Interview::all();
+        $orpectUserId = auth()->user()->orpect_user_id;
+        // $interviews = Interview::all();
+        $interviews = Interview::where('orpect_user_id',$orpectUserId)->get();
+
 
         if ($interviews->isEmpty()) {
             return response()->json(['message' => 'No interviews found.'], 404);
